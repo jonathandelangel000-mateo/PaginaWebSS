@@ -19,6 +19,12 @@
         <h2>Añadir Nuevo Perrito 🐕</h2>
         <input type="text" id="nombre" placeholder="Nombre">
         <input type="text" id="edad" placeholder="Edad">
+        <input type="text" id="edad" placeholder="Edad">
+<select id="sexo" style="width: 96%; margin: 10px 0; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+    <option value="Macho ♂️">Macho ♂️</option>
+    <option value="Hembra ♀️">Hembra ♀️</option>
+</select>
+        
         <textarea id="desc" placeholder="Descripción"></textarea>
         <input type="text" id="urlFoto" placeholder="Link de la foto">
         <button id="btnPublicar" class="btn-subir">Publicar en la Web</button>
@@ -53,12 +59,14 @@
 
             try {
                 await addDoc(collection(db, "perritos"), {
-                    nombre: nombre,
-                    edad: document.getElementById('edad').value,
-                    desc: document.getElementById('desc').value,
-                    fotoUrl: document.getElementById('urlFoto').value,
-                    fecha: new Date()
-                });
+    nombre: nombre,
+    edad: document.getElementById('edad').value,
+    sexo: document.getElementById('sexo').value, // <-- SOLO ESTA LÍNEA AQUÍ
+    desc: document.getElementById('desc').value,
+    fotoUrl: document.getElementById('urlFoto').value,
+    fecha: new Date()
+});
+
                 alert("¡Guardado correctamente!");
                 document.querySelectorAll('input, textarea').forEach(i => i.value = "");
             } catch (e) { 

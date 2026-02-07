@@ -26,7 +26,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-sizing: border-box; /* Importante para que el padding no rompa el ancho */
+            box-sizing: border-box; 
         }
 
         /* Contenido Principal */
@@ -65,18 +65,49 @@
         .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; text-align: center; }
         .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; text-align: center; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
         
-        /* SECCIÓN DE COMENTARIOS */
+        /* ESTILOS NUEVOS PARA COMENTARIOS */
         .seccion-comentarios { 
             background: white; 
-            padding: 15px; 
+            padding: 10px 15px; 
             border-top: 1px solid #eee; 
             font-size: 0.9rem; 
         }
+        
+        /* Contenedor oculto por defecto */
+        .caja-comentarios-oculta {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+
+        .botones-accion {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .btn-accion {
+            background: none;
+            border: 1px solid #ff9800;
+            color: #ff9800;
+            padding: 5px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-accion:hover {
+            background: #fff5e6;
+        }
+
         .comentario { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 5px; color: #333; }
         .comentario b { color: #d35400; font-weight: bold; }
         .btn-borrar-com { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 14px; font-weight: bold; padding: 0 5px; }
         
-        .area-escribir { display: flex; gap: 5px; margin-top: 10px; }
+        .area-escribir { display: flex; gap: 5px; margin-top: 10px; display: none; /* Oculto por defecto */ }
         .input-com { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
         .btn-com { background: #ff9800; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
@@ -89,7 +120,7 @@
     </div>
 
     <div class="sidebar">
-        <h1 style="margin: 0; font-size: 2rem;">🐾 Refugio de Patitas 🐾</h1>
+        <h1 style="margin: 0; font-size: 2rem;">🐾 Refugio 🐾</h1>
         <p style="opacity: 0.9; margin-bottom: 30px;">Encuentra a tu mejor amigo</p>
         
         <div style="width: 100%;">
@@ -100,12 +131,13 @@
         <div style="margin-top: auto; font-size: 0.8rem; opacity: 0.7;">
             © 2026 Refugio de Patitas
         </div>
-    </div> <div class="contenido-principal">
+    </div> 
+
+    <div class="contenido-principal">
         <div class="contenedor" id="lista">Cargando perritos...</div>
     </div>
 
     <script type="module">
-        // 1. IMPORTAMOS TODO LO NECESARIO EN UNA SOLA LÍNEA
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
@@ -155,11 +187,24 @@
                         <p>${p.desc}</p>
                         <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
                     </div>
+                    
                     <div class="seccion-comentarios">
-                        <div id="coms-${p.id}">Cargando comentarios...</div>
-                        <div class="area-escribir">
-                            <input type="text" class="input-com" id="input-${p.id}" placeholder="Escribe un comentario...">
-                            <button class="btn-com" onclick="enviarComentario('${p.id}')">Post</button>
+                        <div class="botones-accion" id="botones-${p.id}">
+                            <button class="btn-accion" onclick="toggleComentarios('${p.id}', false)">💬 Ver comentarios</button>
+                            <button class="btn-accion" onclick="toggleComentarios('${p.id}', true)">✍️ Comentar</button>
+                        </div>
+
+                        <div class="caja-comentarios-oculta" id="area-comentarios-${p.id}">
+                            <div id="coms-${p.id}">Cargando...</div>
+                            
+                            <div class="area-escribir" id="area-input-${p.id}">
+                                <input type="text" class="input-com" id="input-${p.id}" placeholder="Escribe tu opinión...">
+                                <button class="btn-com" onclick="enviarComentario('${p.id}')">Post</button>
+                            </div>
+
+                            <div style="text-align: center; margin-top: 10px;">
+                                <button class="btn-accion" onclick="ocultarTodo('${p.id}')">🔼 Ocultar comentarios</button>
+                            </div>
                         </div>
                     </div>`;
                 lista.appendChild(tarjeta);
@@ -167,10 +212,33 @@
             });
         }
 
+        // NUEVA FUNCIÓN: Controlar qué se ve
+        window.toggleComentarios = (id, quiereEscribir) => {
+            const area = document.getElementById(`area-comentarios-${id}`);
+            const inputArea = document.getElementById(`area-input-${id}`);
+            const botones = document.getElementById(`botones-${id}`);
+
+            // Mostrar el área general
+            area.style.display = "block";
+            botones.style.display = "none"; // Ocultar botones principales
+
+            if(quiereEscribir) {
+                inputArea.style.display = "flex"; // Mostrar caja de texto
+                document.getElementById(`input-${id}`).focus(); // Poner cursor ahí
+            } else {
+                inputArea.style.display = "none"; // Solo ver, no escribir
+            }
+        };
+
+        // NUEVA FUNCIÓN: Volver a cerrar todo
+        window.ocultarTodo = (id) => {
+            document.getElementById(`area-comentarios-${id}`).style.display = "none";
+            document.getElementById(`botones-${id}`).style.display = "flex";
+        };
+
         window.enviarComentario = async (idPerro) => {
             const texto = document.getElementById(`input-${idPerro}`).value;
             if(!texto) return;
-            
             try {
                 await addDoc(collection(db, "perritos", idPerro, "comentarios"), {
                     usuario: nombreUsuario,
@@ -186,7 +254,7 @@
             onSnapshot(q, (snap) => {
                 const contenedor = document.getElementById(`coms-${idPerro}`);
                 contenedor.innerHTML = '';
-                snap.forEach(res => { // Cambié 'doc' por 'res' para no confundir
+                snap.forEach(res => {
                     const c = res.data();
                     contenedor.innerHTML += `
                         <div class="comentario">
@@ -194,7 +262,7 @@
                             <button class="btn-borrar-com" onclick="borrarComentario('${idPerro}', '${res.id}')">✕</button>
                         </div>`;
                 });
-                if(snap.empty) contenedor.innerHTML = '<i style="color:gray">Sé el primero en comentar...</i>';
+                if(snap.empty) contenedor.innerHTML = '<i style="color:gray; font-size: 0.8rem;">No hay comentarios aún.</i>';
             });
         }
 
@@ -209,16 +277,16 @@
             const img = document.getElementById("fotoGrande");
             modal.style.display = "flex";
             img.src = url;
-        }; // <--- ESTA LLAVE FALTABA Y ERA EL ERROR PRINCIPAL
+        };
 
         window.cerrarFoto = () => { document.getElementById("miModal").style.display = "none"; };
         
         window.borrarComentario = async (idPerro, idComentario) => {
-            if(confirm("¿Seguro que quieres eliminar este comentario?")) {
+            if(confirm("¿Borrar comentario?")) {
                 try {
                     const comRef = doc(db, "perritos", idPerro, "comentarios", idComentario);
                     await deleteDoc(comRef);
-                } catch (e) { alert("Error al borrar: " + e); }
+                } catch (e) { alert("Error: " + e); }
             }
        };
     </script>

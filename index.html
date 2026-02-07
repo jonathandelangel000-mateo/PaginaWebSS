@@ -8,11 +8,19 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #fdf2e9; text-align: center; }
         header { background-color: #ff9800; color: white; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .contenedor { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
-        .tarjeta { background: white; border-radius: 20px; width: 300px; margin: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; }
+        .tarjeta { background: white; border-radius: 20px; width: 320px; margin: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; display: flex; flex-direction: column; }
         .tarjeta img { width: 100%; height: 220px; object-fit: cover; cursor: zoom-in; }
-        .info { padding: 20px; text-align: left; }
+        .info { padding: 20px; text-align: left; flex-grow: 1; }
         .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; text-align: center; }
         .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; text-align: center; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
+        
+        /* SECCIÓN DE COMENTARIOS */
+        .seccion-comentarios { background: #fef9f5; padding: 15px; border-top: 1px solid #eee; font-size: 0.85rem; max-height: 200px; overflow-y: auto; }
+        .comentario { margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dotted #ccc; }
+        .comentario b { color: #ff9800; }
+        .area-escribir { display: flex; gap: 5px; margin-top: 10px; }
+        .input-com { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        .btn-com { background: #ff9800; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -34,7 +42,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
@@ -47,13 +55,21 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const miNumero = "5218999508736"; // <--- CAMBIA ESTO POR TU NÚMERO
+        const miNumero = "521XXXXXXXXXX"; // <--- PON AQUÍ TU NÚMERO
         
+        // REGISTRO DE USUARIO SIMPLE
+        let nombreUsuario = localStorage.getItem('nombreUsuario');
+        if (!nombreUsuario) {
+            nombreUsuario = prompt("¡Bienvenido! Danos tu nombre para poder comentar:");
+            if (!nombreUsuario) nombreUsuario = "Amigo anónimo";
+            localStorage.setItem('nombreUsuario', nombreUsuario);
+        }
+
         let todosLosPerritos = [];
 
         onSnapshot(collection(db, "perritos"), (snap) => {
             todosLosPerritos = [];
-            snap.forEach(doc => todosLosPerritos.push(doc.data()));
+            snap.forEach(doc => todosLosPerritos.push({ id: doc.id, ...doc.data() }));
             renderizarPerritos(todosLosPerritos);
         });
 
@@ -63,26 +79,63 @@
             datos.forEach((p) => {
                 const msj = `Hola! Me interesa preguntar por ${p.nombre}`;
                 const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
-                lista.innerHTML += `
-                    <div class="tarjeta">
-                        <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" onerror="this.src='https://via.placeholder.com/300x220?text=Error+en+Imagen'">
-                        <div class="info">
-                            <h3>${p.nombre}</h3>
-                            <p><strong>Edad:</strong> ${p.edad}</p>
-                            <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
-                            <p>${p.desc}</p>
-                            <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
+                
+                const tarjeta = document.createElement('div');
+                tarjeta.className = 'tarjeta';
+                tarjeta.innerHTML = `
+                    <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" onerror="this.src='https://via.placeholder.com/300x220?text=Error+en+Imagen'">
+                    <div class="info">
+                        <h3>${p.nombre}</h3>
+                        <p><strong>Edad:</strong> ${p.edad}</p>
+                        <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
+                        <p>${p.desc}</p>
+                        <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
+                    </div>
+                    <div class="seccion-comentarios">
+                        <div id="coms-${p.id}">Cargando comentarios...</div>
+                        <div class="area-escribir">
+                            <input type="text" class="input-com" id="input-${p.id}" placeholder="Escribe un comentario...">
+                            <button class="btn-com" onclick="enviarComentario('${p.id}')">Post</button>
                         </div>
                     </div>`;
+                lista.appendChild(tarjeta);
+                escucharComentarios(p.id);
             });
-            if(datos.length === 0) lista.innerHTML = "<h3>No se encontraron perritos 🐾</h3>";
         }
 
+        // Lógica para enviar comentario
+        window.enviarComentario = async (idPerro) => {
+            const texto = document.getElementById(`input-${idPerro}`).value;
+            if(!texto) return;
+            
+            try {
+                await addDoc(collection(db, "perritos", idPerro, "comentarios"), {
+                    usuario: nombreUsuario,
+                    texto: texto,
+                    fecha: serverTimestamp()
+                });
+                document.getElementById(`input-${idPerro}`).value = '';
+            } catch (e) { console.error(e); }
+        };
+
+        // Lógica para leer comentarios en tiempo real
+        function escucharComentarios(idPerro) {
+            const q = query(collection(db, "perritos", idPerro, "comentarios"), orderBy("fecha", "asc"));
+            onSnapshot(q, (snap) => {
+                const contenedor = document.getElementById(`coms-${idPerro}`);
+                contenedor.innerHTML = '';
+                snap.forEach(doc => {
+                    const c = doc.data();
+                    contenedor.innerHTML += `<div class="comentario"><b>${c.usuario}:</b> ${c.texto}</div>`;
+                });
+                if(snap.empty) contenedor.innerHTML = '<i style="color:gray">Sé el primero en comentar...</i>';
+            });
+        }
+
+        // Buscador
         document.getElementById('buscador').oninput = (e) => {
             const texto = e.target.value.toLowerCase();
-            const filtrados = todosLosPerritos.filter(perro => 
-                perro.nombre.toLowerCase().includes(texto)
-            );
+            const filtrados = todosLosPerritos.filter(perro => perro.nombre.toLowerCase().includes(texto));
             renderizarPerritos(filtrados);
         };
 
@@ -93,13 +146,7 @@
             img.src = url;
         };
 
-        window.cerrarFoto = () => {
-            document.getElementById("miModal").style.display = "none";
-        };
-
-        document.getElementById('miModal').onclick = (e) => {
-            if(e.target.id === "miModal") cerrarFoto();
-        };
+        window.cerrarFoto = () => { document.getElementById("miModal").style.display = "none"; };
     </script>
 </body>
 </html>

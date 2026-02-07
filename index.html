@@ -3,43 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Refugio de Patitas | Adopta un Amigo</title>
+    <title>Refugio de Patitas</title>
     <style>
-        /* Un poco de estilo para que no se vea aburrido */
-        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; text-align: center; }
+        body { font-family: sans-serif; background-color: #fdf2e9; text-align: center; margin: 0; }
         header { background-color: #ff9800; color: white; padding: 20px; }
-        section { padding: 50px; }
-        .perrito-card { background: white; border-radius: 10px; padding: 20px; display: inline-block; margin: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        button { background-color: #ff9800; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #e68a00; }
+        .contenedor { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
+        .perrito-card { background: white; border-radius: 10px; width: 250px; margin: 10px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .perrito-card img { width: 100%; border-radius: 8px; height: 180px; object-fit: cover; }
     </style>
 </head>
 <body>
-
     <header>
         <h1>🐾 Refugio de Patitas 🐾</h1>
-        <p>Dándoles una segunda oportunidad</p>
+        <p>Conectado a la base de datos en tiempo real</p>
     </header>
 
-    <section>
-        <h2>Conoce a nuestros rescatados</h2>
-        
-        <div class="perrito-card">
-            <h3>Max</h3>
-            <p>Un Golden Retriever muy juguetón y lleno de energía.</p>
-            <button>¡Quiero adoptarlo!</button>
-        </div>
+    <div class="contenedor" id="lista-perritos">
+        <p>Buscando perritos...</p>
+    </div>
 
-        <div class="perrito-card">
-            <h3>Luna</h3>
-            <p>Pequeña, tranquila y perfecta para vivir en departamento.</p>
-            <button>¡Quiero adoptarla!</button>
-        </div>
-    </section>
+    <script type="module">
+        // Usamos links directos para que GitHub lo entienda sin instalar nada
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    <footer>
-        <p>© 2026 Refugio de Patitas - Hecho con amor</p>
-    </footer>
+        // TUS CREDENCIALES (La llave que me pasaste)
+        const firebaseConfig = {
+          apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
+          authDomain: "refugio-de-patitas.firebaseapp.com",
+          projectId: "refugio-de-patitas",
+          storageBucket: "refugio-de-patitas.firebasestorage.app",
+          messagingSenderId: "5921473252",
+          appId: "1:5921473252:web:16f18c4c7cf1ad1509e2f1",
+          measurementId: "G-2EVPG45NXN"
+        };
 
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // LEER DATOS: Esta parte busca la carpeta "perritos" en tu Firebase
+        onSnapshot(collection(db, "perritos"), (snapshot) => {
+            const lista = document.getElementById('lista-perritos');
+            lista.innerHTML = ''; 
+            
+            if (snapshot.empty) {
+                lista.innerHTML = '<p>La base de datos está vacía. ¡Agrega tu primer perrito!</p>';
+            }
+
+            snapshot.forEach((doc) => {
+                const perro = doc.data();
+                lista.innerHTML += `
+                    <div class="perrito-card">
+                        <img src="${perro.fotoUrl}" alt="${perro.nombre}">
+                        <h3>${perro.nombre}</h3>
+                        <p>${perro.desc}</p>
+                    </div>
+                `;
+            });
+        });
+    </script>
 </body>
 </html>

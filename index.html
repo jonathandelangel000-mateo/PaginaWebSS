@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Refugio de Patitas</title>
     <style>
-        body { font-family: sans-serif; background-color: #fdf2e9; text-align: center; margin: 0; }
-        header { background-color: #ff9800; color: white; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #fdf2e9; text-align: center; }
+        header { background-color: #ff9800; color: white; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .contenedor { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
-        .perrito-card { background: white; border-radius: 10px; width: 250px; margin: 10px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .perrito-card img { width: 100%; border-radius: 8px; height: 180px; object-fit: cover; }
+        .tarjeta { background: white; border-radius: 20px; width: 300px; margin: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; }
+        .tarjeta:hover { transform: scale(1.03); }
+        .tarjeta img { width: 100%; height: 220px; object-fit: cover; }
+        .info { padding: 20px; }
+        .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; }
+        .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
     </style>
 </head>
 <body>
@@ -17,48 +21,44 @@
         <h1>🐾 Refugio de Patitas 🐾</h1>
         <p>Conectado a la base de datos en tiempo real</p>
     </header>
-
-    <div class="contenedor" id="lista-perritos">
-        <p>Buscando perritos...</p>
-    </div>
+    <div class="contenedor" id="lista"></div>
 
     <script type="module">
-        // Usamos links directos para que GitHub lo entienda sin instalar nada
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // TUS CREDENCIALES (La llave que me pasaste)
         const firebaseConfig = {
           apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
           authDomain: "refugio-de-patitas.firebaseapp.com",
           projectId: "refugio-de-patitas",
           storageBucket: "refugio-de-patitas.firebasestorage.app",
           messagingSenderId: "5921473252",
-          appId: "1:5921473252:web:16f18c4c7cf1ad1509e2f1",
-          measurementId: "G-2EVPG45NXN"
+          appId: "1:5921473252:web:16f18c4c7cf1ad1509e2f1"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // LEER DATOS: Esta parte busca la carpeta "perritos" en tu Firebase
-        onSnapshot(collection(db, "perritos"), (snapshot) => {
-            const lista = document.getElementById('lista-perritos');
-            lista.innerHTML = ''; 
-            
-            if (snapshot.empty) {
-                lista.innerHTML = '<p>La base de datos está vacía. ¡Agrega tu primer perrito!</p>';
-            }
+        // --- COLOCA TU NÚMERO AQUÍ ABAJO ---
+        const miNumero = "5218999508736"; 
 
-            snapshot.forEach((doc) => {
-                const perro = doc.data();
+        onSnapshot(collection(db, "perritos"), (snap) => {
+            const lista = document.getElementById('lista');
+            lista.innerHTML = '';
+            snap.forEach((doc) => {
+                const p = doc.data();
+                const msj = `Hola! Me interesa adoptar a ${p.nombre}. ¿Me das informes?`;
+                const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
                 lista.innerHTML += `
-                    <div class="perrito-card">
-                        <img src="${perro.fotoUrl}" alt="${perro.nombre}">
-                        <h3>${perro.nombre}</h3>
-                        <p>${perro.desc}</p>
-                    </div>
-                `;
+                    <div class="tarjeta">
+                        <img src="${p.fotoUrl}" onerror="this.src='https://via.placeholder.com/300x220?text=Cargando+Imagen...'">
+                        <div class="info">
+                            <h3>${p.nombre}</h3>
+                            <p><strong>Edad:</strong> ${p.edad} años</p>
+                            <p>${p.desc}</p>
+                            <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
+                        </div>
+                    </div>`;
             });
         });
     </script>

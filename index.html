@@ -9,98 +9,97 @@
         header { background-color: #ff9800; color: white; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .contenedor { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
         .tarjeta { background: white; border-radius: 20px; width: 300px; margin: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; }
-        .tarjeta:hover { transform: scale(1.03); }
-        .tarjeta img { width: 100%; height: 220px; object-fit: cover; }
-        .info { padding: 20px; }
-        .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; }
-        .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
+        .tarjeta img { width: 100%; height: 220px; object-fit: cover; cursor: zoom-in; }
+        .info { padding: 20px; text-align: left; }
+        .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; text-align: center; }
+        .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; text-align: center; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
     </style>
 </head>
-<div id="miModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.9); text-align:center; align-items:center; justify-content:center;">
-    <span onclick="cerrarFoto()" style="position:absolute; top:20px; right:35px; color:white; font-size:40px; font-weight:bold; cursor:pointer;">&times;</span>
-    <img id="fotoGrande" style="max-width:90%; max-height:80%; border-radius:10px; box-shadow: 0 0 20px white; object-fit: contain;">
 <body>
+
+    <div id="miModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.9); text-align:center; align-items:center; justify-content:center;">
+        <span onclick="cerrarFoto()" style="position:absolute; top:20px; right:35px; color:white; font-size:40px; font-weight:bold; cursor:pointer;">&times;</span>
+        <img id="fotoGrande" style="max-width:90%; max-height:80%; border-radius:10px; box-shadow: 0 0 20px white; object-fit: contain;">
+    </div>
+
     <header>
         <h1>🐾 Refugio de Patitas 🐾</h1>
-        <p>Conectado a la base de datos en tiempo real</p>
+        <div style="margin-top: 15px;">
+            <input type="text" id="buscador" placeholder="🔍 Buscar por nombre..." 
+            style="width: 80%; max-width: 400px; padding: 12px; border: none; border-radius: 25px; font-size: 16px; outline: none;">
+        </div>
     </header>
-    <div style="padding: 10px; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-    <input type="text" id="buscador" placeholder="🔍 Buscar por nombre (ej: Pastor...)" 
-    style="width: 80%; max-width: 400px; padding: 12px; border: 2px solid #ff9800; border-radius: 25px; font-size: 16px; outline: none;">
-</div>
 
-    <div class="contenedor" id="lista"></div>
+    <div class="contenedor" id="lista">Cargando perritos...</div>
 
     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
-      authDomain: "refugio-de-patitas.firebaseapp.com",
-      projectId: "refugio-de-patitas",
-      storageBucket: "refugio-de-patitas.firebasestorage.app",
-      messagingSenderId: "5921473252",
-      appId: "1:5921473252:web:16f18c4c7cf1ad1509e2f1"
-    };
+        const firebaseConfig = {
+          apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
+          authDomain: "refugio-de-patitas.firebaseapp.com",
+          projectId: "refugio-de-patitas",
+          storageBucket: "refugio-de-patitas.firebasestorage.app",
+          messagingSenderId: "5921473252",
+          appId: "1:5921473252:web:16f18c4c7cf1ad1509e2f1"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const miNumero = "521XXXXXXXXXX"; // RECUERDA PONER TU NÚMERO AQUÍ
-    
-    let todosLosPerritos = []; // Aquí guardaremos la lista completa
-
-    // ESCUCHAR CAMBIOS EN FIREBASE
-    onSnapshot(collection(db, "perritos"), (snap) => {
-        todosLosPerritos = [];
-        snap.forEach(doc => todosLosPerritos.push(doc.data()));
-        renderizarPerritos(todosLosPerritos);
-    });
-
-    // FUNCIÓN PARA MOSTRAR LOS PERRITOS EN PANTALLA
-    function renderizarPerritos(datos) {
-        const lista = document.getElementById('lista');
-        lista.innerHTML += `
-    <div class="tarjeta">
-        <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" style="cursor:zoom-in" onerror="this.src='https://via.placeholder.com/300x220?text=Cargando+Imagen...'">
-        <div class="info">
-            <h3>${p.nombre}</h3>
-            <p><strong>Edad:</strong> ${p.edad}</p>
-            <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
-            <p>${p.desc}</p>
-            <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
-        </div>
-    </div>`;
-        });
-        if(datos.length === 0) lista.innerHTML = "<h3>No se encontraron perritos con ese nombre 🐾</h3>";
-    }
-
-    // LÓGICA DEL BUSCADOR
-    document.getElementById('buscador').oninput = (e) => {
-        const textoCopiado = e.target.value.toLowerCase();
-        const filtrados = todosLosPerritos.filter(perro => 
-            perro.nombre.toLowerCase().includes(textoCopiado)
-        );
-        renderizarPerritos(filtrados);
-    };
-        // Funciones para el Pop-up
-window.verFoto = (url) => {
-    const modal = document.getElementById("miModal");
-    const img = document.getElementById("fotoGrande");
-    modal.style.display = "flex";
-    img.src = url;
-}
-
-window.cerrarFoto = () => {
-    document.getElementById("miModal").style.display = "none";
-}
-
-// También cerramos si tocan cualquier parte del fondo negro
-document.getElementById("miModal").onclick = (e) => {
-    if(e.target.id === "miModal") cerrarFoto();
-}
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const miNumero = "5218999508736"; // <--- CAMBIA ESTO POR TU NÚMERO
         
-</script>
+        let todosLosPerritos = [];
 
+        onSnapshot(collection(db, "perritos"), (snap) => {
+            todosLosPerritos = [];
+            snap.forEach(doc => todosLosPerritos.push(doc.data()));
+            renderizarPerritos(todosLosPerritos);
+        });
+
+        function renderizarPerritos(datos) {
+            const lista = document.getElementById('lista');
+            lista.innerHTML = '';
+            datos.forEach((p) => {
+                const msj = `Hola! Me interesa preguntar por ${p.nombre}`;
+                const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
+                lista.innerHTML += `
+                    <div class="tarjeta">
+                        <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" onerror="this.src='https://via.placeholder.com/300x220?text=Error+en+Imagen'">
+                        <div class="info">
+                            <h3>${p.nombre}</h3>
+                            <p><strong>Edad:</strong> ${p.edad}</p>
+                            <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
+                            <p>${p.desc}</p>
+                            <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
+                        </div>
+                    </div>`;
+            });
+            if(datos.length === 0) lista.innerHTML = "<h3>No se encontraron perritos 🐾</h3>";
+        }
+
+        document.getElementById('buscador').oninput = (e) => {
+            const texto = e.target.value.toLowerCase();
+            const filtrados = todosLosPerritos.filter(perro => 
+                perro.nombre.toLowerCase().includes(texto)
+            );
+            renderizarPerritos(filtrados);
+        };
+
+        window.verFoto = (url) => {
+            const modal = document.getElementById("miModal");
+            const img = document.getElementById("fotoGrande");
+            modal.style.display = "flex";
+            img.src = url;
+        };
+
+        window.cerrarFoto = () => {
+            document.getElementById("miModal").style.display = "none";
+        };
+
+        document.getElementById('miModal').onclick = (e) => {
+            if(e.target.id === "miModal") cerrarFoto();
+        };
+    </script>
 </body>
 </html>

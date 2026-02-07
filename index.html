@@ -16,6 +16,10 @@
         .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
     </style>
 </head>
+<div id="miModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.9); text-align:center; align-items:center; justify-content:center;">
+    <span onclick="cerrarFoto()" style="position:absolute; top:20px; right:35px; color:white; font-size:40px; font-weight:bold; cursor:pointer;">&times;</span>
+    <img id="fotoGrande" style="max-width:90%; max-height:80%; border-radius:10px; box-shadow: 0 0 20px white; object-fit: contain;">
+    
 <body>
     <header>
         <h1>🐾 Refugio de Patitas 🐾</h1>
@@ -64,8 +68,9 @@
             const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
             lista.innerHTML += `
                 <div class="tarjeta">
-                    <img src="${p.fotoUrl}" onerror="this.src='https://via.placeholder.com/300x220?text=Cargando+Imagen...'">
-                    <div class="info">
+                    // Busca esta línea y modifícala para que tenga el 'onclick'
+                       <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" style="cursor:zoom-in" onerror="this.src='https://via.placeholder.com/300x220?text=Cargando+Imagen...'">
+
                         <h3>${p.nombre}</h3>
                         <p><strong>Edad:</strong> ${p.edad}</p>
                         <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
@@ -85,6 +90,23 @@
         );
         renderizarPerritos(filtrados);
     };
+        // Funciones para el Pop-up
+window.verFoto = (url) => {
+    const modal = document.getElementById("miModal");
+    const img = document.getElementById("fotoGrande");
+    modal.style.display = "flex";
+    img.src = url;
+}
+
+window.cerrarFoto = () => {
+    document.getElementById("miModal").style.display = "none";
+}
+
+// También cerramos si tocan cualquier parte del fondo negro
+document.getElementById("miModal").onclick = (e) => {
+    if(e.target.id === "miModal") cerrarFoto();
+}
+        
 </script>
 
 </body>

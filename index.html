@@ -21,47 +21,71 @@
         <h1>🐾 Refugio de Patitas 🐾</h1>
         <p>Conectado a la base de datos en tiempo real</p>
     </header>
+    <div style="padding: 10px; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <input type="text" id="buscador" placeholder="🔍 Buscar por nombre (ej: Pastor...)" 
+    style="width: 80%; max-width: 400px; padding: 12px; border: 2px solid #ff9800; border-radius: 25px; font-size: 16px; outline: none;">
+</div>
+
     <div class="contenedor" id="lista"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
-          authDomain: "refugio-de-patitas.firebaseapp.com",
-          projectId: "refugio-de-patitas",
-          storageBucket: "refugio-de-patitas.firebasestorage.app",
-          messagingSenderId: "5921473252",
-          appId: "1:5921473252:web:16f18c4c7cf1ad1509e2f1"
-        };
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
+      authDomain: "refugio-de-patitas.firebaseapp.com",
+      projectId: "refugio-de-patitas",
+      storageBucket: "refugio-de-patitas.firebasestorage.app",
+      messagingSenderId: "5921473252",
+      appId: "1:5921473252:web:16f18c4c7cf1ad1509e2f1"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const miNumero = "521XXXXXXXXXX"; // RECUERDA PONER TU NÚMERO AQUÍ
+    
+    let todosLosPerritos = []; // Aquí guardaremos la lista completa
 
-        // --- COLOCA TU NÚMERO AQUÍ ABAJO ---
-        const miNumero = "5218999508736"; 
+    // ESCUCHAR CAMBIOS EN FIREBASE
+    onSnapshot(collection(db, "perritos"), (snap) => {
+        todosLosPerritos = [];
+        snap.forEach(doc => todosLosPerritos.push(doc.data()));
+        renderizarPerritos(todosLosPerritos);
+    });
 
-        onSnapshot(collection(db, "perritos"), (snap) => {
-            const lista = document.getElementById('lista');
-            lista.innerHTML = '';
-            snap.forEach((doc) => {
-                const p = doc.data();
-                const msj = `Hola! Me interesa adoptar a ${p.nombre}. ¿Me das informes?`;
-                const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
-                lista.innerHTML += `
-                    <div class="tarjeta">
-                        <img src="${p.fotoUrl}" onerror="this.src='https://via.placeholder.com/300x220?text=Cargando+Imagen...'">
-                        <div class="info">
-                            <h3>${p.nombre}</h3>
-                            <p><strong>Edad:</strong> ${p.edad} </p>
-                            <p><strong>Sexo:</strong> ${p.sexo}</p>
-                            <p>${p.desc}</p>
-                            <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
-                        </div>
-                    </div>`;
-            });
+    // FUNCIÓN PARA MOSTRAR LOS PERRITOS EN PANTALLA
+    function renderizarPerritos(datos) {
+        const lista = document.getElementById('lista');
+        lista.innerHTML = '';
+        
+        datos.forEach((p) => {
+            const msj = `Hola! Me interesa preguntar por ${p.nombre}`;
+            const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
+            lista.innerHTML += `
+                <div class="tarjeta">
+                    <img src="${p.fotoUrl}" onerror="this.src='https://via.placeholder.com/300x220?text=Cargando+Imagen...'">
+                    <div class="info">
+                        <h3>${p.nombre}</h3>
+                        <p><strong>Edad:</strong> ${p.edad}</p>
+                        <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
+                        <p>${p.desc}</p>
+                        <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
+                    </div>
+                </div>`;
         });
-    </script>
+        if(datos.length === 0) lista.innerHTML = "<h3>No se encontraron perritos con ese nombre 🐾</h3>";
+    }
+
+    // LÓGICA DEL BUSCADOR
+    document.getElementById('buscador').oninput = (e) => {
+        const textoCopiado = e.target.value.toLowerCase();
+        const filtrados = todosLosPerritos.filter(perro => 
+            perro.nombre.toLowerCase().includes(textoCopiado)
+        );
+        renderizarPerritos(filtrados);
+    };
+</script>
+
 </body>
 </html>

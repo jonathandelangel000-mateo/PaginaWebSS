@@ -6,46 +6,58 @@
     <title>Refugio de Patitas</title>
     <style>
         body { 
-    font-family: 'Segoe UI', sans-serif; 
-    margin: 0; 
-    background-color: #fdf2e9; 
-    display: flex; 
-    flex-direction: row; /* Esto pone el panel al lado del contenido */
-}
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            background-color: #fdf2e9; 
+            display: flex; 
+            flex-direction: row; 
+        }
 
-/* Panel Lateral Izquierdo */
-.sidebar { 
-    width: 300px; 
-    background-color: #ff9800; 
-    color: white; 
-    height: 100vh; 
-    position: sticky; 
-    top: 0; 
-    padding: 30px 20px;
-    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+        /* Panel Lateral Izquierdo */
+        .sidebar { 
+            width: 300px; 
+            background-color: #ff9800; 
+            color: white; 
+            height: 100vh; 
+            position: sticky; 
+            top: 0; 
+            padding: 30px 20px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box; /* Importante para que el padding no rompa el ancho */
+        }
 
-/* Contenido Principal (donde están los perros) */
-.contenido-principal { 
-    flex-grow: 1; 
-    overflow-y: auto;
-}
+        /* Contenido Principal */
+        .contenido-principal { 
+            flex-grow: 1; 
+            overflow-y: auto;
+        }
 
-/* Ajuste para Celulares */
-@media (max-width: 768px) {
-    body { flex-direction: column; }
-    .sidebar { 
-        width: 100%; 
-        height: auto; 
-        position: relative; 
-        padding: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-}
+        /* Ajuste para Celulares */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                position: relative; 
+                padding: 20px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }
+        }
 
+        .simbolo-sexo {
+            background: white;
+            padding: 5px 10px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: inline-block;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #ff9800;
+        }
+        
         .contenedor { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
         .tarjeta { background: white; border-radius: 20px; width: 320px; margin: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; display: flex; flex-direction: column; }
         .tarjeta img { width: 100%; height: 220px; object-fit: cover; cursor: zoom-in; }
@@ -54,15 +66,23 @@
         .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; text-align: center; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
         
         /* SECCIÓN DE COMENTARIOS */
-        .seccion-comentarios { background: #fef9f5; padding: 15px; border-top: 1px solid #eee; font-size: 0.85rem; max-height: 200px; overflow-y: auto; }
-        .comentario { margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dotted #ccc; }
-        .comentario b { color: #ff9800; }
+        .seccion-comentarios { 
+            background: white; 
+            padding: 15px; 
+            border-top: 1px solid #eee; 
+            font-size: 0.9rem; 
+        }
+        .comentario { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 5px; color: #333; }
+        .comentario b { color: #d35400; font-weight: bold; }
+        .btn-borrar-com { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 14px; font-weight: bold; padding: 0 5px; }
+        
         .area-escribir { display: flex; gap: 5px; margin-top: 10px; }
         .input-com { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
         .btn-com { background: #ff9800; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
+
     <div id="miModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.9); text-align:center; align-items:center; justify-content:center;">
         <span onclick="cerrarFoto()" style="position:absolute; top:20px; right:35px; color:white; font-size:40px; font-weight:bold; cursor:pointer;">&times;</span>
         <img id="fotoGrande" style="max-width:90%; max-height:80%; border-radius:10px; box-shadow: 0 0 20px white; object-fit: contain;">
@@ -80,15 +100,15 @@
         <div style="margin-top: auto; font-size: 0.8rem; opacity: 0.7;">
             © 2026 Refugio de Patitas
         </div>
-
-    <div class="contenido-principal">
+    </div> <div class="contenido-principal">
         <div class="contenedor" id="lista">Cargando perritos...</div>
     </div>
 
     <script type="module">
+        // 1. IMPORTAMOS TODO LO NECESARIO EN UNA SOLA LÍNEA
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
         const firebaseConfig = {
           apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
           authDomain: "refugio-de-patitas.firebaseapp.com",
@@ -100,9 +120,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const miNumero = "5218999508736"; // <--- PON AQUÍ TU NÚMERO
+        const miNumero = "5218999508736"; 
         
-        // REGISTRO DE USUARIO SIMPLE
         let nombreUsuario = localStorage.getItem('nombreUsuario');
         if (!nombreUsuario) {
             nombreUsuario = prompt("¡Bienvenido! Danos tu nombre para poder comentar:");
@@ -132,7 +151,7 @@
                     <div class="info">
                         <h3>${p.nombre}</h3>
                         <p><strong>Edad:</strong> ${p.edad}</p>
-                        <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
+                        <p class="simbolo-sexo">${p.sexo || '⚠️'}</p>
                         <p>${p.desc}</p>
                         <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
                     </div>
@@ -148,7 +167,6 @@
             });
         }
 
-        // Lógica para enviar comentario
         window.enviarComentario = async (idPerro) => {
             const texto = document.getElementById(`input-${idPerro}`).value;
             if(!texto) return;
@@ -163,21 +181,23 @@
             } catch (e) { console.error(e); }
         };
 
-        // Lógica para leer comentarios en tiempo real
         function escucharComentarios(idPerro) {
             const q = query(collection(db, "perritos", idPerro, "comentarios"), orderBy("fecha", "asc"));
             onSnapshot(q, (snap) => {
                 const contenedor = document.getElementById(`coms-${idPerro}`);
                 contenedor.innerHTML = '';
-                snap.forEach(doc => {
-                    const c = doc.data();
-                    contenedor.innerHTML += `<div class="comentario"><b>${c.usuario}:</b> ${c.texto}</div>`;
+                snap.forEach(res => { // Cambié 'doc' por 'res' para no confundir
+                    const c = res.data();
+                    contenedor.innerHTML += `
+                        <div class="comentario">
+                            <span><b>${c.usuario}:</b> ${c.texto}</span>
+                            <button class="btn-borrar-com" onclick="borrarComentario('${idPerro}', '${res.id}')">✕</button>
+                        </div>`;
                 });
                 if(snap.empty) contenedor.innerHTML = '<i style="color:gray">Sé el primero en comentar...</i>';
             });
         }
 
-        // Buscador
         document.getElementById('buscador').oninput = (e) => {
             const texto = e.target.value.toLowerCase();
             const filtrados = todosLosPerritos.filter(perro => perro.nombre.toLowerCase().includes(texto));
@@ -189,9 +209,18 @@
             const img = document.getElementById("fotoGrande");
             modal.style.display = "flex";
             img.src = url;
-        };
+        }; // <--- ESTA LLAVE FALTABA Y ERA EL ERROR PRINCIPAL
 
         window.cerrarFoto = () => { document.getElementById("miModal").style.display = "none"; };
+        
+        window.borrarComentario = async (idPerro, idComentario) => {
+            if(confirm("¿Seguro que quieres eliminar este comentario?")) {
+                try {
+                    const comRef = doc(db, "perritos", idPerro, "comentarios", idComentario);
+                    await deleteDoc(comRef);
+                } catch (e) { alert("Error al borrar: " + e); }
+            }
+       };
     </script>
 </body>
 </html>

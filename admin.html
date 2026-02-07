@@ -10,7 +10,7 @@
         input, textarea { width: 90%; margin: 10px 0; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
         .btn-subir { background: #ff9800; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .item-perro { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
-        .btn-borrar { background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .btn-borrar { background: #ff4444; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -27,7 +27,7 @@
 
     <div class="lista">
         <h3>Perritos en Adopción</h3>
-        <div id="lista-admin">Cargando...</div>
+        <div id="lista-admin">Cargando perritos...</div>
     </div>
 
     <script type="module">
@@ -46,42 +46,54 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // PUBLICAR
+        // FUNCIÓN PARA PUBLICAR
         document.getElementById('btnPublicar').onclick = async () => {
+            const nombre = document.getElementById('nombre').value;
+            if(!nombre) return alert("Escribe al menos el nombre");
+
             try {
                 await addDoc(collection(db, "perritos"), {
-                    nombre: document.getElementById('nombre').value,
+                    nombre: nombre,
                     edad: document.getElementById('edad').value,
                     desc: document.getElementById('desc').value,
                     fotoUrl: document.getElementById('urlFoto').value,
                     fecha: new Date()
                 });
-                alert("¡Publicado!");
+                alert("¡Guardado correctamente!");
                 document.querySelectorAll('input, textarea').forEach(i => i.value = "");
-            } catch (e) { alert("Error: " + e); }
+            } catch (e) { 
+                alert("Error al guardar: " + e); 
+            }
         };
 
-        // MOSTRAR Y BORRAR
+        // FUNCIÓN PARA MOSTRAR Y ELIMINAR EN TIEMPO REAL
         onSnapshot(collection(db, "perritos"), (snapshot) => {
             const divLista = document.getElementById('lista-admin');
             divLista.innerHTML = '';
+            
             snapshot.forEach((res) => {
                 const perro = res.data();
-                const id = res.id;
-                divLista.innerHTML += `
-                    <div class="item-perro">
-                        <span><strong>${perro.nombre}</strong></span>
-                        <button class="btn-borrar" onclick="eliminarPerro('${id}')">Eliminar</button>
-                    </div>
-                `;
-            });
-        });
+                const idDoc = res.id;
 
-        window.eliminarPerro = async (id) => {
-            if(confirm("¿Seguro que quieres eliminar este perrito?")) {
-                await deleteDoc(doc(db, "perritos", id));
-            }
-        };
+                const divPerro = document.createElement('div');
+                divPerro.className = 'item-perro';
+                divPerro.innerHTML = `<span><strong>${perro.nombre}</strong></span>`;
+
+                const botonBorrar = document.createElement('button');
+                botonBorrar.innerText = 'Eliminar';
+                botonBorrar.className = 'btn-borrar';
+                botonBorrar.onclick = async () => {
+                    if(confirm("¿Quieres borrar a " + perro.nombre + "?")) {
+                        await deleteDoc(doc(db, "perritos", idDoc));
+                    }
+                };
+
+                divPerro.appendChild(botonBorrar);
+                divLista.appendChild(divPerro);
+            });
+
+            if(snapshot.empty) divLista.innerHTML = "No hay perritos en la lista.";
+        });
     </script>
 </body>
 </html>

@@ -61,22 +61,17 @@
     // FUNCIÓN PARA MOSTRAR LOS PERRITOS EN PANTALLA
     function renderizarPerritos(datos) {
         const lista = document.getElementById('lista');
-        lista.innerHTML = '';
-        
-        datos.forEach((p) => {
-            const msj = `Hola! Me interesa preguntar por ${p.nombre}`;
-            const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
-            lista.innerHTML += `
-                <div class="tarjeta">
-                       <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" style="cursor:zoom-in" onerror="this.src='https://via.placeholder.com/300x220?text=Cargando+Imagen...'">
-
-                        <h3>${p.nombre}</h3>
-                        <p><strong>Edad:</strong> ${p.edad}</p>
-                        <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
-                        <p>${p.desc}</p>
-                        <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
-                    </div>
-                </div>`;
+        lista.innerHTML += `
+    <div class="tarjeta">
+        <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" style="cursor:zoom-in" onerror="this.src='https://via.placeholder.com/300x220?text=Cargando+Imagen...'">
+        <div class="info">
+            <h3>${p.nombre}</h3>
+            <p><strong>Edad:</strong> ${p.edad}</p>
+            <p><strong>Sexo:</strong> ${p.sexo || 'Sin definir'}</p>
+            <p>${p.desc}</p>
+            <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
+        </div>
+    </div>`;
         });
         if(datos.length === 0) lista.innerHTML = "<h3>No se encontraron perritos con ese nombre 🐾</h3>";
     }

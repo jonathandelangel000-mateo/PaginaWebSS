@@ -33,6 +33,7 @@
         .contenido-principal { 
             flex-grow: 1; 
             overflow-y: auto;
+            scroll-behavior: smooth; /* Para que baje suavemente al perrito compartido */
         }
 
         /* Ajuste para Celulares */
@@ -59,13 +60,34 @@
         }
         
         .contenedor { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
-        .tarjeta { background: white; border-radius: 20px; width: 320px; margin: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; display: flex; flex-direction: column; }
+        
+        /* TARJETA */
+        .tarjeta { 
+            background: white; 
+            border-radius: 20px; 
+            width: 320px; 
+            margin: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            transition: 0.3s; 
+            display: flex; 
+            flex-direction: column; 
+            border: 2px solid transparent; /* Para iluminar al compartir */
+        }
+        
+        /* Clase para destacar el perrito compartido */
+        .tarjeta-destacada {
+            border: 2px solid #ff9800;
+            box-shadow: 0 0 30px rgba(255, 152, 0, 0.6);
+            transform: scale(1.02);
+        }
+
         .tarjeta img { width: 100%; height: 220px; object-fit: cover; cursor: zoom-in; }
         .info { padding: 20px; text-align: left; flex-grow: 1; }
         .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; text-align: center; }
         .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; text-align: center; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
         
-        /* ESTILOS NUEVOS PARA COMENTARIOS */
+        /* ESTILOS PARA COMENTARIOS, LIKES Y COMPARTIR */
         .seccion-comentarios { 
             background: white; 
             padding: 10px 15px; 
@@ -73,7 +95,6 @@
             font-size: 0.9rem; 
         }
         
-        /* Contenedor oculto por defecto */
         .caja-comentarios-oculta {
             display: none;
             margin-top: 10px;
@@ -83,31 +104,45 @@
 
         .botones-accion {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between; 
+            align-items: center;
             margin-top: 10px;
+        }
+        
+        .grupo-botones-derecha {
+            display: flex;
+            gap: 5px;
         }
 
         .btn-accion {
             background: none;
             border: 1px solid #ff9800;
             color: #ff9800;
-            padding: 5px 15px;
+            padding: 5px 10px;
             border-radius: 15px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: bold;
             transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 3px;
         }
 
-        .btn-accion:hover {
-            background: #fff5e6;
-        }
+        .btn-accion:hover { background: #fff5e6; }
+        .btn-compartir { border-color: #2196F3; color: #2196F3; } /* Azul para compartir */
+        .btn-compartir:hover { background: #e3f2fd; }
 
+        .cont-likes { display: flex; align-items: center; gap: 5px; }
+        .btn-like { background: none; border: none; font-size: 1.4rem; cursor: pointer; transition: 0.2s; padding: 0; }
+        .btn-like:active { transform: scale(1.3); }
+        .numero-likes { font-weight: bold; color: #555; font-size: 0.9rem; cursor: pointer; text-decoration: underline; }
+        
         .comentario { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 5px; color: #333; }
         .comentario b { color: #d35400; font-weight: bold; }
         .btn-borrar-com { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 14px; font-weight: bold; padding: 0 5px; }
         
-        .area-escribir { display: flex; gap: 5px; margin-top: 10px; display: none; /* Oculto por defecto */ }
+        .area-escribir { display: flex; gap: 5px; margin-top: 10px; display: none; }
         .input-com { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
         .btn-com { background: #ff9800; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
@@ -139,7 +174,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp, deleteDoc, doc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         const firebaseConfig = {
           apiKey: "AIzaSyB0ahP8K53dm8BIRhjXYxCbSJ8sNfQi-NI",
@@ -156,7 +191,7 @@
         
         let nombreUsuario = localStorage.getItem('nombreUsuario');
         if (!nombreUsuario) {
-            nombreUsuario = prompt("¡Bienvenido! Danos tu nombre para poder comentar:");
+            nombreUsuario = prompt("¡Bienvenido! Danos tu nombre para poder comentar y dar likes:");
             if (!nombreUsuario) nombreUsuario = "Amigo anónimo";
             localStorage.setItem('nombreUsuario', nombreUsuario);
         }
@@ -172,12 +207,27 @@
         function renderizarPerritos(datos) {
             const lista = document.getElementById('lista');
             lista.innerHTML = '';
+            
+            // Para saber si tenemos que ir a un perro especifico (Deep Link)
+            const idEnUrl = window.location.hash.replace('#', '');
+
             datos.forEach((p) => {
                 const msj = `Hola! Me interesa preguntar por ${p.nombre}`;
                 const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
                 
+                // Likes
+                const listaLikes = p.likes || [];
+                const yaDioLike = listaLikes.includes(nombreUsuario);
+                const iconoCorazon = yaDioLike ? "❤️" : "🤍";
+                const totalLikes = listaLikes.length;
+
                 const tarjeta = document.createElement('div');
                 tarjeta.className = 'tarjeta';
+                tarjeta.id = p.id; // IMPORTANTE: Ponemos el ID en el HTML para poder saltar a él
+                
+                // Si este es el perro del link, lo resaltamos
+                if(p.id === idEnUrl) tarjeta.classList.add('tarjeta-destacada');
+
                 tarjeta.innerHTML = `
                     <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" onerror="this.src='https://via.placeholder.com/300x220?text=Error+en+Imagen'">
                     <div class="info">
@@ -190,8 +240,17 @@
                     
                     <div class="seccion-comentarios">
                         <div class="botones-accion" id="botones-${p.id}">
-                            <button class="btn-accion" onclick="toggleComentarios('${p.id}', false)">💬 Ver comentarios</button>
-                            <button class="btn-accion" onclick="toggleComentarios('${p.id}', true)">✍️ Comentar</button>
+                            
+                            <div class="cont-likes">
+                                <button class="btn-like" onclick="toggleLike('${p.id}', ${yaDioLike})">${iconoCorazon}</button>
+                                <span class="numero-likes" onclick="verListaLikes('${p.id}')" title="Ver quién dio like">${totalLikes}</span>
+                            </div>
+
+                            <div class="grupo-botones-derecha">
+                                <button class="btn-accion" onclick="toggleComentarios('${p.id}', false)">💬 Ver</button>
+                                <button class="btn-accion" onclick="toggleComentarios('${p.id}', true)">✍️</button>
+                                <button class="btn-accion btn-compartir" onclick="compartirPerrito('${p.id}', '${p.nombre}')">🔗 Compartir</button>
+                            </div>
                         </div>
 
                         <div class="caja-comentarios-oculta" id="area-comentarios-${p.id}">
@@ -203,37 +262,82 @@
                             </div>
 
                             <div style="text-align: center; margin-top: 10px;">
-                                <button class="btn-accion" onclick="ocultarTodo('${p.id}')">🔼 Ocultar comentarios</button>
+                                <button class="btn-accion" onclick="ocultarTodo('${p.id}')">🔼 Ocultar</button>
                             </div>
                         </div>
                     </div>`;
                 lista.appendChild(tarjeta);
                 escucharComentarios(p.id);
             });
+
+            // Si hay un ID en el link (alguien compartió), bajamos hasta ahí
+            if(idEnUrl) {
+                setTimeout(() => {
+                    const elemento = document.getElementById(idEnUrl);
+                    if(elemento) elemento.scrollIntoView({behavior: "smooth", block: "center"});
+                }, 1000); // Esperamos 1 seg para asegurar que cargó todo
+            }
         }
 
-        // NUEVA FUNCIÓN: Controlar qué se ve
+        // --- FUNCION COMPARTIR ---
+        window.compartirPerrito = async (id, nombre) => {
+            // Creamos el link especial: sitioweb.com/#ID-DEL-PERRO
+            const urlParaCompartir = window.location.href.split('#')[0] + '#' + id;
+            
+            // Si es celular (Android/iPhone), abrimos el menú nativo (WhatsApp, Insta, FB)
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `Adopta a ${nombre} 🐾`,
+                        text: `¡Mira a este perrito del Refugio! Se llama ${nombre}.`,
+                        url: urlParaCompartir
+                    });
+                } catch (err) { console.log('Cancelado por usuario'); }
+            } else {
+                // Si es compu, copiamos al portapapeles
+                navigator.clipboard.writeText(urlParaCompartir);
+                alert("¡Link copiado! Pégalo en Facebook, WhatsApp o donde quieras:\n\n" + urlParaCompartir);
+            }
+        };
+
+        // --- FUNCIONES LIKES Y COMENTARIOS ---
+        window.toggleLike = async (id, yaDioLike) => {
+            const perroRef = doc(db, "perritos", id);
+            try {
+                if (yaDioLike) {
+                    await updateDoc(perroRef, { likes: arrayRemove(nombreUsuario) });
+                } else {
+                    await updateDoc(perroRef, { likes: arrayUnion(nombreUsuario) });
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        window.verListaLikes = (id) => {
+            const perro = todosLosPerritos.find(p => p.id === id);
+            if (perro && perro.likes && perro.likes.length > 0) {
+                alert("❤️ A estas personas les gusta " + perro.nombre + ":\n\n" + perro.likes.join("\n"));
+            } else {
+                alert("💔 Nadie le ha dado like aún.");
+            }
+        };
+
         window.toggleComentarios = (id, quiereEscribir) => {
             const area = document.getElementById(`area-comentarios-${id}`);
             const inputArea = document.getElementById(`area-input-${id}`);
             const botones = document.getElementById(`botones-${id}`);
-
-            // Mostrar el área general
             area.style.display = "block";
-            botones.style.display = "none"; // Ocultar botones principales
-
+            botones.style.display = "none"; 
             if(quiereEscribir) {
-                inputArea.style.display = "flex"; // Mostrar caja de texto
-                document.getElementById(`input-${id}`).focus(); // Poner cursor ahí
+                inputArea.style.display = "flex"; 
+                document.getElementById(`input-${id}`).focus(); 
             } else {
-                inputArea.style.display = "none"; // Solo ver, no escribir
+                inputArea.style.display = "none"; 
             }
         };
 
-        // NUEVA FUNCIÓN: Volver a cerrar todo
         window.ocultarTodo = (id) => {
             document.getElementById(`area-comentarios-${id}`).style.display = "none";
-            document.getElementById(`botones-${id}`).style.display = "flex";
+            document.getElementById(`botones-${id}`).style.display = "flex"; 
         };
 
         window.enviarComentario = async (idPerro) => {

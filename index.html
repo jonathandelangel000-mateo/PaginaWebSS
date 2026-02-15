@@ -33,7 +33,7 @@
         .contenido-principal { 
             flex-grow: 1; 
             overflow-y: auto;
-            scroll-behavior: smooth; /* Para que baje suavemente al perrito compartido */
+            scroll-behavior: smooth; 
         }
 
         /* Ajuste para Celulares */
@@ -48,8 +48,7 @@
             }
         }
 
-        .simbolo-sexo { 
-            center
+        .simbolo-sexo {
             background: white;
             padding: 5px 10px;
             border-radius: 50%;
@@ -73,10 +72,9 @@
             transition: 0.3s; 
             display: flex; 
             flex-direction: column; 
-            border: 2px solid transparent; /* Para iluminar al compartir */
+            border: 2px solid transparent; 
         }
         
-        /* Clase para destacar el perrito compartido */
         .tarjeta-destacada {
             border: 2px solid #ff9800;
             box-shadow: 0 0 30px rgba(255, 152, 0, 0.6);
@@ -86,6 +84,19 @@
         .tarjeta img { width: 100%; height: 220px; object-fit: cover; cursor: zoom-in; }
         .info { padding: 20px; text-align: left; flex-grow: 1; }
         .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; text-align: center; }
+        
+        /* ESTILO PARA LA RAZA */
+        .raza-badge {
+            background-color: #ffe0b2;
+            color: #e65100;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
         .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; text-align: center; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
         
         /* ESTILOS PARA COMENTARIOS, LIKES Y COMPARTIR */
@@ -131,7 +142,7 @@
         }
 
         .btn-accion:hover { background: #fff5e6; }
-        .btn-compartir { border-color: #2196F3; color: #2196F3; } /* Azul para compartir */
+        .btn-compartir { border-color: #2196F3; color: #2196F3; } 
         .btn-compartir:hover { background: #e3f2fd; }
 
         .cont-likes { display: flex; align-items: center; gap: 5px; }
@@ -209,14 +220,12 @@
             const lista = document.getElementById('lista');
             lista.innerHTML = '';
             
-            // Para saber si tenemos que ir a un perro especifico (Deep Link)
             const idEnUrl = window.location.hash.replace('#', '');
 
             datos.forEach((p) => {
                 const msj = `Hola! Me interesa preguntar por ${p.nombre}`;
                 const linkWa = `https://wa.me/${miNumero}?text=${encodeURIComponent(msj)}`;
                 
-                // Likes
                 const listaLikes = p.likes || [];
                 const yaDioLike = listaLikes.includes(nombreUsuario);
                 const iconoCorazon = yaDioLike ? "❤️" : "🤍";
@@ -224,20 +233,23 @@
 
                 const tarjeta = document.createElement('div');
                 tarjeta.className = 'tarjeta';
-                tarjeta.id = p.id; // IMPORTANTE: Ponemos el ID en el HTML para poder saltar a él
+                tarjeta.id = p.id; 
                 
-                // Si este es el perro del link, lo resaltamos
                 if(p.id === idEnUrl) tarjeta.classList.add('tarjeta-destacada');
 
+                // AQUÍ AGREGUÉ LA RAZA
                 tarjeta.innerHTML = `
                     <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" onerror="this.src='https://via.placeholder.com/300x220?text=Error+en+Imagen'">
                     <div class="info">
                         <h3>${p.nombre}</h3>
-                        <span><strong>Raza:</strong> ${p.raza || 'Mestizo'}</span>
+                        
+                        <div style="text-align:center; margin-bottom:10px;">
+                            <span class="raza-badge">🐕 ${p.raza || 'Mestizo'}</span>
                         </div>
-                        <span><strong>Edad:</strong> ${p.edad}</span>
-                        <span class="simbolo-sexo">${p.sexo || '⚠️'}</span>
-                        <span>${p.desc}</span>
+
+                        <p><strong>Edad:</strong> ${p.edad}</p>
+                        <p class="simbolo-sexo">${p.sexo || '⚠️'}</p>
+                        <p>${p.desc}</p>
                         <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
                     </div>
                     
@@ -273,21 +285,16 @@
                 escucharComentarios(p.id);
             });
 
-            // Si hay un ID en el link (alguien compartió), bajamos hasta ahí
             if(idEnUrl) {
                 setTimeout(() => {
                     const elemento = document.getElementById(idEnUrl);
                     if(elemento) elemento.scrollIntoView({behavior: "smooth", block: "center"});
-                }, 1000); // Esperamos 1 seg para asegurar que cargó todo
+                }, 1000); 
             }
         }
 
-        // --- FUNCION COMPARTIR ---
         window.compartirPerrito = async (id, nombre) => {
-            // Creamos el link especial: sitioweb.com/#ID-DEL-PERRO
             const urlParaCompartir = window.location.href.split('#')[0] + '#' + id;
-            
-            // Si es celular (Android/iPhone), abrimos el menú nativo (WhatsApp, Insta, FB)
             if (navigator.share) {
                 try {
                     await navigator.share({
@@ -297,13 +304,11 @@
                     });
                 } catch (err) { console.log('Cancelado por usuario'); }
             } else {
-                // Si es compu, copiamos al portapapeles
                 navigator.clipboard.writeText(urlParaCompartir);
                 alert("¡Link copiado! Pégalo en Facebook, WhatsApp o donde quieras:\n\n" + urlParaCompartir);
             }
         };
 
-        // --- FUNCIONES LIKES Y COMENTARIOS ---
         window.toggleLike = async (id, yaDioLike) => {
             const perroRef = doc(db, "perritos", id);
             try {

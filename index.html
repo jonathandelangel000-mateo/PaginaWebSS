@@ -48,7 +48,8 @@
             }
         }
 
-        .simbolo-sexo {
+        .simbolo-sexo { 
+            center
             background: white;
             padding: 5px 10px;
             border-radius: 50%;
@@ -234,9 +235,9 @@
                         <h3>${p.nombre}</h3>
                         <span><strong>Raza:</strong> ${p.raza || 'Mestizo'}</span>
                         </div>
-                        <p><strong>Edad:</strong> ${p.edad}</p>
-                        <p class="simbolo-sexo">${p.sexo || '⚠️'}</p>
-                        <p>${p.desc}</p>
+                        <span><strong>Edad:</strong> ${p.edad}</span>
+                        <span class="simbolo-sexo">${p.sexo || '⚠️'}</span>
+                        <span>${p.desc}</span>
                         <a href="${linkWa}" target="_blank" class="btn-wa">Pedir informes por WhatsApp</a>
                     </div>
                     

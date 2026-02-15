@@ -9,13 +9,12 @@
             font-family: 'Segoe UI', sans-serif; 
             margin: 0; 
             
-            /* --- CAMBIO 1: FONDO DE LA LISTA DE PERRITOS --- */
-            /* Cambia el link de abajo por la foto que tú quieras */
+            /* FONDO DE LA LISTA DE PERRITOS */
             background-image: url('https://res.cloudinary.com/daafrfwj1/image/upload/v1771185706/peekpxjm9ljbc0crczdi.jpg'); 
-            background-color: #fdf2e9; /* Color de respaldo por si la imagen no carga */
-            background-size: cover;       /* Ajusta la imagen para cubrir todo */
+            background-color: #fdf2e9; 
+            background-size: cover;       
             background-position: center; 
-            background-attachment: fixed; /* ¡El secreto! El fondo se queda fijo al hacer scroll */
+            background-attachment: fixed; 
             
             display: flex; 
             flex-direction: row; 
@@ -25,8 +24,7 @@
         .sidebar { 
             width: 300px; 
             
-            /* --- CAMBIO 2: FONDO DEL TÍTULO / SIDEBAR --- */
-            /* El "linear-gradient" crea una capa naranja transparente sobre tu foto para que el texto se lea */
+            /* FONDO DEL TÍTULO / SIDEBAR */
             background: linear-gradient(rgba(255, 152, 0, 0.9), rgba(255, 152, 0, 0.7)), url('https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=500&q=80');
             background-size: cover;
             background-position: center;
@@ -99,17 +97,17 @@
         .info { padding: 20px; text-align: left; flex-grow: 1; }
         .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; text-align: center; }
         
-                /* ESTILO PARA LA RAZA (MODIFICADO) */
+        /* ESTILO PARA LA RAZA */
         .raza-badge {
-            background-color: #ffe0b2; /* Fondo naranja clarito */
-            color: black;              /* Texto en NEGRO */
-            padding: 6px 12px;         /* Un poco más de espacio */
+            background-color: #ffe0b2; 
+            color: black;              
+            padding: 6px 12px;         
             border-radius: 12px;
-            font-size: 1.2rem;         /* Letra MÁS GRANDE (antes era 0.9rem) */
-            font-weight: 900;          /* Super NEGRITAS (Extra bold) */
+            font-size: 1.2rem;         
+            font-weight: 900;          
             display: inline-block;
             margin-bottom: 5px;
-            border: 1px solid #ff9800; /* Opcional: un borde finito para resaltar más */
+            border: 1px solid #ff9800; 
         }
 
 
@@ -183,7 +181,7 @@
     </div>
 
     <div class="sidebar">
-        <h1 style="margin: 0; font-size: 2rem;"> Refugio </h1>
+        <h1 style="margin: 0; font-size: 2rem;">🐾 Refugio 🐾</h1>
         <p style="opacity: 0.9; margin-bottom: 30px;">Encuentra a tu mejor amigo</p>
         
         <div style="width: 100%;">
@@ -191,8 +189,9 @@
             style="width: 100%; box-sizing: border-box; padding: 15px; border: none; border-radius: 12px; font-size: 16px; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         </div>
 
-        <div style="margin-top: auto; font-size: 0.8rem; opacity: 0.7;">
-            © 2026 Refugio de Patitas
+        <div style="margin-top: auto; font-size: 0.8rem; opacity: 0.8; text-align: center; line-height: 1.5;">
+            © 2026 Refugio de Patitas<br>
+            <span style="font-weight: bold; font-size: 0.75rem;">- Desarrollado por Jonathan Del Angel -</span>
         </div>
     </div> 
 
@@ -253,7 +252,6 @@
                 
                 if(p.id === idEnUrl) tarjeta.classList.add('tarjeta-destacada');
 
-                // AQUÍ AGREGUÉ LA RAZA
                 tarjeta.innerHTML = `
                     <img src="${p.fotoUrl}" onclick="verFoto('${p.fotoUrl}')" onerror="this.src='https://via.placeholder.com/300x220?text=Error+en+Imagen'">
                     <div class="info">
@@ -394,15 +392,12 @@
             });
         }
 
-                // --- BUSCADOR POR RAZA ---
+        // BUSCADOR POR RAZA
         document.getElementById('buscador').oninput = (e) => {
             const texto = e.target.value.toLowerCase();
-            
-            // Aquí le decimos que filtre por la RAZA, no por el nombre
             const filtrados = todosLosPerritos.filter(perro => 
                 (perro.raza || '').toLowerCase().includes(texto)
             );
-            
             renderizarPerritos(filtrados);
         };
 

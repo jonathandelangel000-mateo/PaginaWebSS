@@ -85,17 +85,19 @@
         .info { padding: 20px; text-align: left; flex-grow: 1; }
         .info h3 { color: #e68a00; margin: 0 0 10px 0; font-size: 1.6rem; text-align: center; }
         
-        /* ESTILO PARA LA RAZA */
+                /* ESTILO PARA LA RAZA (MODIFICADO) */
         .raza-badge {
-            background-color: #ffe0b2;
-            color: #e65100;
-            padding: 4px 8px;
+            background-color: #ffe0b2; /* Fondo naranja clarito */
+            color: black;              /* Texto en NEGRO */
+            padding: 6px 12px;         /* Un poco más de espacio */
             border-radius: 12px;
-            font-size: 0.9rem;
-            font-weight: bold;
+            font-size: 1.2rem;         /* Letra MÁS GRANDE (antes era 0.9rem) */
+            font-weight: 900;          /* Super NEGRITAS (Extra bold) */
             display: inline-block;
             margin-bottom: 5px;
+            border: 1px solid #ff9800; /* Opcional: un borde finito para resaltar más */
         }
+
 
         .btn-wa { background: #25d366; color: white; text-decoration: none; padding: 12px; display: block; border-radius: 10px; font-weight: bold; margin-top: 15px; text-align: center; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
         
@@ -244,7 +246,7 @@
                         <h3>${p.nombre}</h3>
                         
                         <div style="text-align:center; margin-bottom:10px;">
-                            <span class="raza-badge">🐕 ${p.raza || 'Mestizo'}</span>
+                            <span class="raza-badge"> ${p.raza || 'Mestizo'}</span>
                         </div>
 
                         <p><strong>Edad:</strong> ${p.edad}</p>

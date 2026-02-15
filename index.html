@@ -183,11 +183,11 @@
     </div>
 
     <div class="sidebar">
-        <h1 style="margin: 0; font-size: 2rem;">🐾 Refugio 🐾</h1>
+        <h1 style="margin: 0; font-size: 2rem;"> Refugio </h1>
         <p style="opacity: 0.9; margin-bottom: 30px;">Encuentra a tu mejor amigo</p>
         
         <div style="width: 100%;">
-            <input type="text" id="buscador" placeholder="🔍 Buscar por nombre..." 
+            <input type="text" id="buscador" placeholder="🔍 Buscar por raza..." 
             style="width: 100%; box-sizing: border-box; padding: 15px; border: none; border-radius: 12px; font-size: 16px; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         </div>
 
@@ -394,11 +394,18 @@
             });
         }
 
+                // --- BUSCADOR POR RAZA ---
         document.getElementById('buscador').oninput = (e) => {
             const texto = e.target.value.toLowerCase();
-            const filtrados = todosLosPerritos.filter(perro => perro.nombre.toLowerCase().includes(texto));
+            
+            // Aquí le decimos que filtre por la RAZA, no por el nombre
+            const filtrados = todosLosPerritos.filter(perro => 
+                (perro.raza || '').toLowerCase().includes(texto)
+            );
+            
             renderizarPerritos(filtrados);
         };
+
 
         window.verFoto = (url) => {
             const modal = document.getElementById("miModal");

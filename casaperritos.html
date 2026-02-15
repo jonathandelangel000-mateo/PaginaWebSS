@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Subir Foto del Perrito</title>
+    
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+
+    <style>
+        .btn-subir {
+            background-color: #3498db; color: white; padding: 10px 20px;
+            border: none; border-radius: 5px; cursor: pointer; font-size: 16px;
+        }
+        .preview { max-width: 300px; margin-top: 10px; display: none; border: 2px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <h2>Registro de Nuevo Rescate</h2>
+
+    <form action="guardar_perro.php" method="POST"> <label>Nombre del perro:</label><br>
+        <input type="text" name="nombre" required><br><br>
+
+        <button type="button" id="upload_widget" class="btn-subir">📸 Subir Foto</button>
+        <br>
+        
+        <img id="imagen_previa" class="preview" src="">
+        
+        <input type="hidden" name="foto_url" id="input_foto_url" required>
+        
+        <br><br>
+        <button type="submit">Guardar Perrito</button>
+    </form>
+
+    <script type="text/javascript">  
+        var myWidget = cloudinary.createUploadWidget({
+            cloudName: 'daafrfwj1',       // YA PUSE TU CLOUD NAME AQUÍ
+            uploadPreset: 'jonathan_delangel', // <--- ¡OJO! BORRA ESTO Y PON EL NOMBRE DE TU PRESET
+            sources: ['local', 'camera'], // Permite subir de archivos o cámara
+            language: "es",               // Pone el widget en español
+            text: {
+                "es": {
+                    "or": "o",
+                    "menu": { "files": "Mis Archivos" }
+                }
+            }
+        }, (error, result) => { 
+            if (!error && result && result.event === "success") { 
+                console.log('Imagen subida! Link:', result.info.secure_url);
+                
+                // 1. Guardamos el link en el input oculto para que se envíe a tu BD
+                document.getElementById("input_foto_url").value = result.info.secure_url;
+                
+                // 2. Mostramos la foto en pantalla para que vean que funcionó
+                var previa = document.getElementById("imagen_previa");
+                previa.src = result.info.secure_url;
+                previa.style.display = "block";
+            }
+        });
+
+        document.getElementById("upload_widget").addEventListener("click", function(){
+            myWidget.open();
+        }, false);
+    </script>
+
+</body>
+</html>

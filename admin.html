@@ -54,7 +54,7 @@
         <div id="lista-admin">Cargando perritos...</div>
     </div>
 
-    <script type="module">
+        <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -71,63 +71,10 @@
         const db = getFirestore(app);
         let idEdicion = null;
 
-        // 1. FUNCIÓN PUBLICAR (CON RAZA)
-        document.getElementById('btnPublicar').onclick = async () => {
-            const nombre = document.getElementById('nombre').value;
-            const raza = document.getElementById('raza').value; // Capturamos Raza
-            const urlFoto = document.getElementById('urlFoto').value;
-
-            if(!nombre) return alert("Escribe el nombre");
-            if(!urlFoto) return alert("¡Falta subir la foto del perrito!");
-
-            try {
-                await addDoc(collection(db, "perritos"), {
-                    nombre: nombre,
-                    raza: raza || "Mestizo", // Si no ponen nada, se guarda como Mestizo
-                    edad: document.getElementById('edad').value,
-                    sexo: document.getElementById('sexo').value,
-                    desc: document.getElementById('desc').value,
-                    fotoUrl: urlFoto,
-                    fecha: new Date()
-                });
-                limpiarFormulario();
-                alert("¡Publicado!");
-            } catch (e) { alert("Error: " + e); }
-        };
-
-        // 2. MOSTRAR LISTA (CON RAZA)
-        onSnapshot(collection(db, "perritos"), (snapshot) => {
-            const divLista = document.getElementById('lista-admin');
-            divLista.innerHTML = '';
-            snapshot.forEach((res) => {
-                const perro = res.data();
-                const idDoc = res.id;
-                const divPerro = document.createElement('div');
-                divPerro.className = 'item-perro';
-                
-                // Muestra Nombre - Raza - Sexo
-                divPerro.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${perro.fotoUrl}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
-                        <div>
-                            <strong>${perro.nombre}</strong> <small>(${perro.raza || 'Mestizo'})</small><br>
-                            <span style="font-size:12px; color:grey;">${perro.sexo || 'Sin definir'}</span>
-                        </div>
-                    </div>
-                    <div class="acciones">
-                        <button class="btn-editar" onclick="prepararEdicion('${idDoc}', '${perro.nombre}', '${perro.raza || ''}', '${perro.edad}', '${perro.sexo}', '${perro.desc}', '${perro.fotoUrl}')">Editar</button>
-                        <button class="btn-borrar" onclick="eliminarPerro('${idDoc}', '${perro.nombre}')">Eliminar</button>
-                    </div>
-                `;
-                divLista.appendChild(divPerro);
-            });
-        });
-
-        // 3. EDITAR (CON RAZA)
         window.prepararEdicion = (id, nombre, raza, edad, sexo, desc, foto) => {
             idEdicion = id;
             document.getElementById('nombre').value = nombre;
-            document.getElementById('raza').value = raza; // Cargamos Raza
+            document.getElementById('raza').value = raza; 
             document.getElementById('edad').value = edad;
             document.getElementById('sexo').value = sexo || "Macho ♂️";
             document.getElementById('desc').value = desc;
@@ -144,13 +91,43 @@
             window.scrollTo(0,0);
         };
 
-        // 4. ACTUALIZAR (CON RAZA)
+        window.eliminarPerro = async (id, nombre) => {
+            if(confirm("¿Borrar a " + nombre + "?")) {
+                try {
+                    await deleteDoc(doc(db, "perritos", id));
+                } catch (e) { alert("Error al borrar: " + e); }
+            }
+        };
+
+        document.getElementById('btnPublicar').onclick = async () => {
+            const nombre = document.getElementById('nombre').value;
+            const raza = document.getElementById('raza').value; 
+            const urlFoto = document.getElementById('urlFoto').value;
+
+            if(!nombre) return alert("Escribe el nombre");
+            if(!urlFoto) return alert("¡Falta subir la foto del perrito!");
+
+            try {
+                await addDoc(collection(db, "perritos"), {
+                    nombre: nombre,
+                    raza: raza || "Mestizo", 
+                    edad: document.getElementById('edad').value,
+                    sexo: document.getElementById('sexo').value,
+                    desc: document.getElementById('desc').value,
+                    fotoUrl: urlFoto,
+                    fecha: new Date()
+                });
+                limpiarFormulario();
+                alert("¡Publicado con éxito! 🐕");
+            } catch (e) { alert("Error: " + e); }
+        };
+
         document.getElementById('btnActualizar').onclick = async () => {
             try {
                 const perroRef = doc(db, "perritos", idEdicion);
                 await updateDoc(perroRef, {
                     nombre: document.getElementById('nombre').value,
-                    raza: document.getElementById('raza').value, // Actualizamos Raza
+                    raza: document.getElementById('raza').value, 
                     edad: document.getElementById('edad').value,
                     sexo: document.getElementById('sexo').value,
                     desc: document.getElementById('desc').value,
@@ -159,10 +136,6 @@
                 alert("¡Cambios guardados!");
                 limpiarFormulario();
             } catch (e) { alert("Error al actualizar: " + e); }
-        };
-
-        window.eliminarPerro = async (id, nombre) => {
-            if(confirm("¿Borrar a " + nombre + "?")) await deleteDoc(doc(db, "perritos", id));
         };
 
         document.getElementById('btnCancelar').onclick = () => limpiarFormulario();
@@ -178,6 +151,32 @@
             document.getElementById('btnActualizar').style.display = "none";
             document.getElementById('btnCancelar').style.display = "none";
         }
+
+        onSnapshot(collection(db, "perritos"), (snapshot) => {
+            const divLista = document.getElementById('lista-admin');
+            divLista.innerHTML = '';
+            snapshot.forEach((res) => {
+                const perro = res.data();
+                const idDoc = res.id;
+                const divPerro = document.createElement('div');
+                divPerro.className = 'item-perro';
+                
+                divPerro.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${perro.fotoUrl}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" onerror="this.src='https://via.placeholder.com/40x40?text=Err'">
+                        <div>
+                            <strong>${perro.nombre}</strong> <small>(${perro.raza || 'Mestizo'})</small><br>
+                            <span style="font-size:12px; color:grey;">${perro.sexo || 'Sin definir'}</span>
+                        </div>
+                    </div>
+                    <div class="acciones">
+                        <button class="btn-editar" onclick="prepararEdicion('${idDoc}', '${perro.nombre}', '${perro.raza || ''}', '${perro.edad}', '${perro.sexo}', '${perro.desc}', '${perro.fotoUrl}')">Editar</button>
+                        <button class="btn-borrar" onclick="eliminarPerro('${idDoc}', '${perro.nombre}')">Eliminar</button>
+                    </div>
+                `;
+                divLista.appendChild(divPerro);
+            });
+        });
     </script>
 
     <script type="text/javascript">  
@@ -206,6 +205,7 @@
             myWidget.open();
         }, false);
     </script>
+
 
 </body>
 </html>
